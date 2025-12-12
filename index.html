@@ -2,179 +2,214 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Kursni Olish</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Konkurs</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --bg: #0f0f1a; 
-            --card: #1a1a2e; 
-            --text: #e0e0e0; 
-            --accent: #00ff88; 
-            --gold: #FFD700;
-            --btn-grad: linear-gradient(45deg, #00b09b, #96c93d);
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #fff);
+            --text-color: var(--tg-theme-text-color, #000);
+            --btn-color: var(--tg-theme-button-color, #2481cc);
+            --btn-text: var(--tg-theme-button-text-color, #fff);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #f0f0f0);
         }
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-        
-        body { 
-            margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; 
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; 
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        
-        /* Asosiy Kartochka */
-        .card { 
-            background: var(--card); border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); 
-            text-align: center; margin-bottom: 20px; animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .icon { font-size: 60px; margin-bottom: 15px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        /* Sahifa yuklanguncha hech narsa ko'rinmaydi */
+        .view {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
 
-        h1 { margin: 0 0 10px; font-size: 24px; color: white; font-weight: 700; }
-        p { color: #aaa; font-size: 15px; margin-bottom: 25px; line-height: 1.5; }
+        .card {
+            background: var(--secondary-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        h2 { margin-top: 0; font-size: 22px; }
+        p { font-size: 16px; opacity: 0.8; }
         
-        /* Asosiy Tugma */
         .btn {
-            background: var(--btn-grad); color: white; border: none; padding: 16px; 
-            border-radius: 14px; font-size: 18px; font-weight: bold; width: 100%; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3); transition: transform 0.1s, opacity 0.2s;
+            background-color: var(--btn-color);
+            color: var(--btn-text);
+            padding: 16px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            text-decoration: none;
+            display: block;
+            box-sizing: border-box;
+            transition: opacity 0.2s;
         }
-        .btn:active { transform: scale(0.97); }
-        .btn:disabled { opacity: 0.7; cursor: wait; }
         
-        /* Admin Tugmasi */
-        .btn-sec {
-            background: rgba(255,255,255,0.08); color: #ccc; margin-top: 15px; box-shadow: none; font-size: 14px; padding: 12px;
+        .btn:active { opacity: 0.8; }
+
+        .progress-container {
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+            height: 10px;
+            width: 100%;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: var(--btn-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
         }
 
-        /* Muddat */
-        .info-box {
-            margin-top: 20px; font-size: 13px; color: #888; 
-            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; display: none;
+        .timer {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 20px;
+            margin: 15px 0;
+            background: rgba(231, 76, 60, 0.1);
+            padding: 10px;
+            border-radius: 8px;
         }
 
-        /* REKLAMA BLOKI */
-        .ad-card {
-            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.02));
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            text-align: left; position: relative; overflow: hidden;
-            display: none; width: 100%; max-width: 400px;
-            padding: 15px; border-radius: 15px; margin-bottom: 15px;
+        .ad-banner {
+            border: 2px dashed var(--btn-color);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 30px;
+            background: rgba(36, 129, 204, 0.05);
         }
-        .ad-card.clickable { cursor: pointer; }
-        .ad-card.clickable:active { background: rgba(255,255,255,0.1); }
-        
-        .ad-card::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--gold);
-        }
-        .ad-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .ad-label { font-size: 11px; font-weight: bold; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-        .ad-icon { color: var(--gold); font-size: 14px; display: none; }
-        .ad-content { font-size: 14px; color: #fff; line-height: 1.4; font-weight: 500; }
+        .ad-banner h3 { margin: 0 0 10px 0; font-size: 16px; }
+        .ad-banner a { color: var(--btn-color); text-decoration: none; font-weight: bold; }
 
+        /* Loader */
+        #loader { font-size: 18px; font-weight: bold; color: var(--btn-color); }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <div class="card">
-        <div class="icon">🎁</div>
-        <h1>Tabriklaymiz!</h1>
-        <p>Siz barcha shartlarni muvaffaqiyatli bajardingiz.<br>Maxsus kursni olish uchun tugmani bosing.</p>
-        
-        <button class="btn" id="mainBtn" onclick="openCourse()">
-            <i class="fas fa-play-circle"></i> KURSNI OCHISH
-        </button>
+    <div id="loader">Yuklanmoqda...</div>
 
-        <div class="info-box" id="deadlineBox">
-            ⏳ Tugash vaqti: <span id="deadlineText" style="color: #fff; font-weight: bold;"></span>
+    <!-- 1. Qulflangan Oyna -->
+    <div id="locked-view" class="view">
+        <div class="card">
+            <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
+            <h2>Kirish Yopiq</h2>
+            <p>Kursni ochish uchun do'stlaringizni taklif qiling.</p>
+            
+            <div class="progress-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            
+            <p style="font-size: 18px; font-weight: bold;">
+                <span id="stat-current">0</span> / <span id="stat-req">0</span>
+            </p>
         </div>
+        <button class="btn" onclick="Telegram.WebApp.close()">Ortga qaytish</button>
     </div>
 
-    <div class="ad-card" id="adCard" onclick="openAdLink()">
-        <div class="ad-header">
-            <span class="ad-label">Foydali Link</span>
-            <i class="fas fa-external-link-alt ad-icon" id="adLinkIcon"></i>
+    <!-- 2. Ochiq Oyna -->
+    <div id="unlocked-view" class="view">
+        <div class="card">
+            <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+            <h2>Tabriklaymiz!</h2>
+            <p>Siz kursga to'liq kirish huquqiga egasiz.</p>
+            
+            <div class="timer" id="countdown">00:00:00</div>
+            
+            <button id="go-course-btn" class="btn">Kursni Boshlash</button>
         </div>
-        <div class="ad-content" id="adText"></div>
-    </div>
 
-    <button class="btn btn-sec" onclick="contactAdmin()" style="max-width: 400px;">
-        <i class="fas fa-headset"></i> Admin bilan bog'lanish
-    </button>
+        <!-- Reklama -->
+        <div class="ad-banner" id="ad-block" style="display:none;">
+            <h3 id="ad-text"></h3>
+            <a id="ad-link" href="#" target="_blank">Batafsil ko'rish &rarr;</a>
+        </div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-
-        const params = new URLSearchParams(window.location.search);
-        
-        // Parametrlarni tozalash funksiyasi
-        function cleanParam(val) {
-            if (!val || val === "null" || val === "None" || val === "" || val === "undefined") return null;
-            return decodeURIComponent(val);
-        }
-
-        const link = cleanParam(params.get('l'));
-        const endData = cleanParam(params.get('ed'));
-        const adText = cleanParam(params.get('ad'));
-        const adLink = cleanParam(params.get('al'));
-        const adminContact = cleanParam(params.get('ac'));
-
-        // MUDDAT
-        if (endData) {
-            document.getElementById('deadlineBox').style.display = 'block';
-            document.getElementById('deadlineText').innerText = endData;
-        }
-        
-        // REKLAMA
-        if (adText && adText.length > 2) {
-            const adCard = document.getElementById('adCard');
-            adCard.style.display = 'block';
-            document.getElementById('adText').innerText = adText;
-
-            if (adLink) {
-                adCard.classList.add('clickable');
-                document.getElementById('adLinkIcon').style.display = 'block';
-            } else {
-                adCard.onclick = null;
-            }
-        }
-
-        function openAdLink() {
-            if (adLink) {
-                if (adLink.startsWith('https://t.me')) tg.openTelegramLink(adLink);
-                else tg.openLink(adLink);
-            }
-        }
-
-        function openCourse() {
-            const btn = document.getElementById('mainBtn');
-            if (link) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ochilmoqda...';
-                setTimeout(() => {
-                    tg.openLink(link);
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-check"></i> Qayta ochish';
-                    }, 1000);
-                }, 500);
-            } else {
-                tg.showPopup({message: "Uzr, kurs havolasi topilmadi."});
-            }
-        }
-
-        function contactAdmin() {
-            if (adminContact) tg.openTelegramLink(adminContact);
-            else tg.showPopup({message: "Admin manzili kiritilmagan."});
-        }
-        
         document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // URL parametrlarini olish
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        const access = urlParams.get('access') === 'true';
+        const invites = parseInt(urlParams.get('invites') || 0);
+        const required = parseInt(urlParams.get('req') || 5);
+        const courseUrl = urlParams.get('course') || ''; // Agar access=false bo'lsa, bu bo'sh keladi
+        const bannerText = urlParams.get('bt');
+        const bannerLink = urlParams.get('bl');
+
+        const loader = document.getElementById('loader');
+        const lockedView = document.getElementById('locked-view');
+        const unlockedView = document.getElementById('unlocked-view');
+
+        // Logic
+        if (access) {
+            // Ruxsat bor
+            loader.style.display = 'none';
+            unlockedView.style.display = 'block';
+
+            document.getElementById('go-course-btn').addEventListener('click', () => {
+                if(courseUrl) {
+                    tg.openLink(courseUrl);
+                } else {
+                    tg.showAlert("Havola topilmadi!");
+                }
+            });
+
+            if (bannerText && bannerLink) {
+                document.getElementById('ad-block').style.display = 'block';
+                document.getElementById('ad-text').innerText = bannerText;
+                document.getElementById('ad-link').href = bannerLink;
+            }
+
+            // Taymer
+            let duration = 24 * 60 * 60; // 24 soat
+            const timerEl = document.getElementById('countdown');
+            
+            setInterval(() => {
+                let h = Math.floor(duration / 3600);
+                let m = Math.floor((duration % 3600) / 60);
+                let s = Math.floor(duration % 60);
+                timerEl.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                if (duration > 0) duration--;
+            }, 1000);
+
+        } else {
+            // Ruxsat YO'Q
+            loader.style.display = 'none';
+            lockedView.style.display = 'block';
+
+            document.getElementById('stat-current').innerText = invites;
+            document.getElementById('stat-req').innerText = required;
+
+            // Progress bar
+            const percentage = Math.min((invites / required) * 100, 100);
+            document.getElementById('progress-bar').style.width = percentage + '%';
+        }
     </script>
 </body>
 </html>
