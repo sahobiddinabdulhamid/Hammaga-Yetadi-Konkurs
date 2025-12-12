@@ -55,13 +55,16 @@
             background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;
         }
 
-        /* Reklama Bloki */
+        /* Reklama Bloki (Clickable) */
         .ad-card {
             background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-            border-left: 4px solid #FFD700; text-align: left;
+            border-left: 4px solid #FFD700; text-align: left; cursor: pointer;
+            transition: background 0.2s;
         }
+        .ad-card:active { background: rgba(255,255,255,0.1); }
         .ad-label { font-size: 10px; font-weight: bold; color: #FFD700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .ad-content { font-size: 13px; color: #fff; line-height: 1.4; }
+        .ad-content { font-size: 13px; color: #fff; line-height: 1.4; display: flex; justify-content: space-between; align-items: center;}
+        .ad-arrow { font-size: 16px; color: #FFD700; }
 
     </style>
 </head>
@@ -81,9 +84,12 @@
         </div>
     </div>
 
-    <div class="card ad-card" id="adCard" style="display: none;">
+    <div class="card ad-card" id="adCard" style="display: none;" onclick="openAdLink()">
         <div class="ad-label">🔥 Tavsiya qilamiz</div>
-        <div class="ad-content" id="adText"></div>
+        <div class="ad-content">
+            <span id="adText"></span>
+            <i class="fas fa-external-link-alt ad-arrow"></i>
+        </div>
     </div>
 
     <button class="btn btn-sec" onclick="contactAdmin()" style="max-width: 400px;">
@@ -99,6 +105,7 @@
         const link = decodeURIComponent(params.get('l') || "");
         const endData = decodeURIComponent(params.get('ed') || "");
         const adText = decodeURIComponent(params.get('ad') || "");
+        const adLink = decodeURIComponent(params.get('al') || ""); // Reklama Linki
         const adminContact = decodeURIComponent(params.get('ac') || "");
 
         // 1. Muddatni joylash
@@ -114,7 +121,17 @@
             document.getElementById('adText').innerText = adText;
         }
 
-        // 3. Kursni ochish funksiyasi
+        // 3. Reklama Linkini ochish
+        function openAdLink() {
+            if (adLink && adLink.length > 5 && adLink !== "null") {
+                tg.openTelegramLink(adLink); // Telegram link bo'lsa
+            } else {
+                // Agar telegram link bo'lmasa oddiy link sifatida ochish
+                tg.openLink(adLink);
+            }
+        }
+
+        // 4. Kursni ochish funksiyasi
         function openCourse() {
             if (link && link.length > 5 && link !== "null") {
                 tg.openLink(link);
@@ -123,7 +140,7 @@
             }
         }
 
-        // 4. Admin bilan bog'lanish
+        // 5. Admin bilan bog'lanish
         function contactAdmin() {
             if (adminContact && adminContact !== "null") {
                 tg.openTelegramLink(adminContact);
@@ -132,7 +149,7 @@
             }
         }
         
-        // Xavfsizlik (O'ng tugma va belgilashni o'chirish)
+        // Xavfsizlik
         document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
