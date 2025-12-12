@@ -1,196 +1,245 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Kursni Olish</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root { 
-            --bg: #0f0f1a; 
-            --card: #1a1a2e; 
-            --text: #e0e0e0; 
-            --accent: #00ff88; 
-            --gold: #FFD700;
-            --btn-grad: linear-gradient(45deg, #00b09b, #96c93d);
-        }
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+import logging
+import sqlite3
+import urllib.parse
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+from telegram.constants import ChatMemberStatus, ParseMode
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    CommandHandler,
+    MessageHandler,
+    ChatMemberHandler,
+    CallbackQueryHandler,
+    filters
+)
+
+# --- SOZLAMALAR ---
+TOKEN = "8223788937:AAF8g2oiMb2V2He4jCPav8T1eOaojyTrc3o"
+MAIN_ADMIN_ID = 6787735720
+WEBAPP_URL = "https://sahobiddinabdulhamid.github.io/Hammaga-Yetadi-Konkurs"
+BOT_USERNAME = "@Hammaga_Yetadi_bot"
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+# --- BAZA ---
+def get_db(): return sqlite3.connect('konkurs_final.db')
+
+def init_db():
+    conn = get_db(); cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+        user_id INTEGER PRIMARY KEY, full_name TEXT, username TEXT, invites INTEGER DEFAULT 0,
+        invite_link TEXT, assigned_channel_id TEXT, pro_claimed_at TEXT, banned_until INTEGER DEFAULT 0)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS sponsors (channel_id TEXT PRIMARY KEY, title TEXT, url TEXT)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS targets (channel_id TEXT PRIMARY KEY, title TEXT, joined_count INTEGER DEFAULT 0)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)''')
+    
+    defaults = [
+        ("required_invites", "3"), 
+        ("course_link", "https://youtube.com"), 
+        ("end_date", "31.12.2025"), 
+        ("ad_text", "Reklama joyi"), 
+        ("ad_link", "https://t.me/"), # Reklama Linki
+        ("admin_contact", "https://t.me/admin"), 
+        ("current_target_index", "0")
+    ]
+    for key, val in defaults:
+        cursor.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (key, val))
+    conn.commit(); conn.close()
+
+init_db()
+
+# --- YORDAMCHI FUNKSIYALAR ---
+def get_setting(key):
+    conn = get_db(); res = conn.cursor().execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    conn.close(); return res[0] if res else ""
+
+def set_setting(key, value):
+    conn = get_db(); conn.cursor().execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
+    conn.commit(); conn.close()
+
+def add_sponsor(cid, title, url):
+    conn = get_db(); conn.cursor().execute("INSERT OR REPLACE INTO sponsors VALUES (?, ?, ?)", (cid, title, url)); conn.commit(); conn.close()
+def get_sponsors():
+    conn = get_db(); res = conn.cursor().execute("SELECT * FROM sponsors").fetchall(); conn.close(); return res
+def del_sponsor(cid):
+    conn = get_db(); conn.cursor().execute("DELETE FROM sponsors WHERE channel_id=?", (cid,)); conn.commit(); conn.close()
+
+def add_target(cid, title):
+    conn = get_db(); conn.cursor().execute("INSERT OR REPLACE INTO targets (channel_id, title) VALUES (?, ?)", (cid, title)); conn.commit(); conn.close()
+def get_targets():
+    conn = get_db(); res = conn.cursor().execute("SELECT * FROM targets").fetchall(); conn.close(); return res
+def del_target(cid):
+    conn = get_db(); conn.cursor().execute("DELETE FROM targets WHERE channel_id=?", (cid,)); conn.commit(); conn.close()
+
+def get_next_target_channel():
+    targets = get_targets()
+    if not targets: return None
+    idx = int(get_setting('current_target_index') or 0)
+    if idx >= len(targets): idx = 0 
+    selected = targets[idx] 
+    new_idx = (idx + 1) % len(targets)
+    set_setting('current_target_index', new_idx)
+    return selected[0], selected[1]
+
+# --- URL YASASH ---
+def generate_webapp_url_logic(user_first_name):
+    course = urllib.parse.quote(get_setting('course_link'))
+    end_d = urllib.parse.quote(get_setting('end_date'))
+    ad_txt = urllib.parse.quote(get_setting('ad_text'))
+    ad_lnk = urllib.parse.quote(get_setting('ad_link')) # Link qo'shildi
+    adm = urllib.parse.quote(get_setting('admin_contact'))
+    return f"{WEBAPP_URL}/index.html?l={course}&ed={end_d}&ad={ad_txt}&al={ad_lnk}&ac={adm}"
+
+# --- TRACK JOIN (HISOB-KITOB) ---
+async def track_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.chat_member: return
+    
+    result = update.chat_member
+    chat_id = str(result.chat.id)
+    
+    targets = [c[0] for c in get_targets()]
+    if chat_id not in targets: return
+
+    new_status = result.new_chat_member.status
+    old_status = result.old_chat_member.status
+    
+    is_join = new_status in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.RESTRICTED]
+    was_not_member = old_status in [ChatMemberStatus.LEFT, ChatMemberStatus.KICKED, "kicked", "left"] or old_status is None
+
+    if is_join and was_not_member:
+        invite_link = result.invite_link
         
-        body { 
-            margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; 
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; 
-        }
-        
-        /* Asosiy Kartochka */
-        .card { 
-            background: var(--card); border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); 
-            text-align: center; margin-bottom: 20px; animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .icon { font-size: 60px; margin-bottom: 15px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-        h1 { margin: 0 0 10px; font-size: 24px; color: white; font-weight: 700; }
-        p { color: #aaa; font-size: 15px; margin-bottom: 25px; line-height: 1.5; }
-        
-        /* Asosiy Tugma */
-        .btn {
-            background: var(--btn-grad); color: white; border: none; padding: 16px; 
-            border-radius: 14px; font-size: 18px; font-weight: bold; width: 100%; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3); transition: transform 0.1s, opacity 0.2s;
-        }
-        .btn:active { transform: scale(0.97); }
-        .btn:disabled { opacity: 0.7; cursor: wait; }
-        
-        /* Admin Tugmasi */
-        .btn-sec {
-            background: rgba(255,255,255,0.08); color: #ccc; margin-top: 15px; box-shadow: none; font-size: 14px; padding: 12px;
-        }
-
-        /* Muddat */
-        .info-box {
-            margin-top: 20px; font-size: 13px; color: #888; 
-            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; display: none; /* Boshida yashirin */
-        }
-
-        /* Reklama Bloki */
-        .ad-card {
-            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.02));
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            text-align: left; position: relative; overflow: hidden;
-            display: none; /* Boshida yashirin */
-        }
-        .ad-card.clickable { cursor: pointer; }
-        .ad-card.clickable:active { background: rgba(255,255,255,0.1); }
-        
-        .ad-card::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--gold);
-        }
-        .ad-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .ad-label { font-size: 11px; font-weight: bold; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-        .ad-icon { color: var(--gold); font-size: 14px; display: none; }
-        .ad-content { font-size: 14px; color: #fff; line-height: 1.4; font-weight: 500; }
-
-    </style>
-</head>
-<body oncontextmenu="return false;">
-
-    <div class="card">
-        <div class="icon">🎁</div>
-        <h1>Tabriklaymiz!</h1>
-        <p>Siz barcha shartlarni muvaffaqiyatli bajardingiz.<br>Maxsus kursni olish uchun tugmani bosing.</p>
-        
-        <button class="btn" id="mainBtn" onclick="openCourse()">
-            <i class="fas fa-play-circle"></i> KURSNI OCHISH
-        </button>
-
-        <div class="info-box" id="deadlineBox">
-            ⏳ Tugash vaqti: <span id="deadlineText" style="color: #fff; font-weight: bold;"></span>
-        </div>
-    </div>
-
-    <div class="card ad-card" id="adCard" onclick="openAdLink()">
-        <div class="ad-header">
-            <span class="ad-label">Foydali Link</span>
-            <i class="fas fa-external-link-alt ad-icon" id="adLinkIcon"></i>
-        </div>
-        <div class="ad-content" id="adText"></div>
-    </div>
-
-    <button class="btn btn-sec" onclick="contactAdmin()" style="max-width: 400px;">
-        <i class="fas fa-headset"></i> Admin bilan bog'lanish
-    </button>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // URL dan ma'lumotlarni olish
-        const params = new URLSearchParams(window.location.search);
-        
-        // "null" yoki "None" so'zlarini tozalash funksiyasi
-        function cleanParam(val) {
-            if (!val || val === "null" || val === "None" || val === "") return null;
-            return decodeURIComponent(val);
-        }
-
-        const link = cleanParam(params.get('l'));
-        const endData = cleanParam(params.get('ed'));
-        const adText = cleanParam(params.get('ad'));
-        const adLink = cleanParam(params.get('al'));
-        const adminContact = cleanParam(params.get('ac'));
-
-        // 1. Muddatni joylash (Agar bo'lsa)
-        if (endData) {
-            document.getElementById('deadlineBox').style.display = 'block';
-            document.getElementById('deadlineText').innerText = endData;
-        }
-        
-        // 2. Reklamani joylash (Agar bo'lsa)
-        if (adText && adText.length > 2) {
-            const adCard = document.getElementById('adCard');
-            adCard.style.display = 'block';
-            document.getElementById('adText').innerText = adText;
-
-            // Agar Link ham bo'lsa
-            if (adLink) {
-                adCard.classList.add('clickable');
-                document.getElementById('adLinkIcon').style.display = 'block';
-            } else {
-                // Link bo'lmasa bosilmaydigan qilamiz
-                adCard.onclick = null;
-            }
-        }
-
-        // 3. Reklama Linkini ochish
-        function openAdLink() {
-            if (adLink) {
-                if (adLink.startsWith('https://t.me')) {
-                    tg.openTelegramLink(adLink);
-                } else {
-                    tg.openLink(adLink);
-                }
-            }
-        }
-
-        // 4. Kursni ochish funksiyasi
-        function openCourse() {
-            const btn = document.getElementById('mainBtn');
+        if invite_link and invite_link.name and invite_link.name.isdigit():
+            inviter_id = int(invite_link.name)
             
-            if (link) {
-                // Animatsiya
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ochilmoqda...';
-                
-                setTimeout(() => {
-                    tg.openLink(link);
-                    // Tugmani asl holiga qaytarish
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-check"></i> Qayta ochish';
-                    }, 1000);
-                }, 500);
-            } else {
-                tg.showPopup({message: "Uzr, kurs havolasi topilmadi yoki hali kiritilmagan."});
-            }
-        }
+            if inviter_id == result.new_chat_member.user.id: return
 
-        // 5. Admin bilan bog'lanish
-        function contactAdmin() {
-            if (adminContact) {
-                tg.openTelegramLink(adminContact);
-            } else {
-                tg.showPopup({message: "Admin manzili kiritilmagan."});
-            }
-        }
+            conn = get_db(); cur = conn.cursor()
+            cur.execute("UPDATE users SET invites = invites + 1 WHERE user_id=?", (inviter_id,))
+            cur.execute("UPDATE targets SET joined_count = joined_count + 1 WHERE channel_id=?", (chat_id,))
+            conn.commit(); conn.close()
+            
+            try:
+                req = int(get_setting('required_invites'))
+                conn = get_db(); curr = conn.cursor().execute("SELECT invites, full_name FROM users WHERE user_id=?", (inviter_id,)).fetchone(); conn.close()
+                invites_count = curr[0]
+                inviter_name = curr[1]
+                joined_name = result.new_chat_member.user.full_name
+
+                # --- VAZIFA BAJARILDI ---
+                if invites_count >= req:
+                    url = generate_webapp_url_logic(inviter_name)
+                    kb = [[InlineKeyboardButton("🎓 KURSNI OCHISH (KIRISH)", web_app=WebAppInfo(url=url))]]
+                    msg = (f"🎉 <b>TABRIKLAYMIZ!</b>\n\n"
+                           f"👤 {joined_name} qo'shildi.\n"
+                           f"✅ Siz {invites_count} ta odam yig'dingiz va vazifani bajardingiz!\n\n"
+                           f"Kursni ko'rish uchun pastdagi tugmani bosing 👇")
+                    await context.bot.send_message(inviter_id, msg, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.HTML)
+                else:
+                    msg = f"👤 <b>Yangi a'zo qo'shildi!</b>\n({joined_name})\n\n📊 Jami: {invites_count}/{req}\n❗️ Yana {req - invites_count} ta qoldi."
+                    await context.bot.send_message(inviter_id, msg, parse_mode=ParseMode.HTML)
+
+            except Exception as e: print(f"Xato: {e}")
+
+# --- OBUNA TEKSHIRUVI ---
+async def check_subscription(user_id, bot):
+    sponsors = get_sponsors()
+    if not sponsors: return True, []
+    not_joined = []
+    for cid, title, url in sponsors:
+        try:
+            member = await bot.get_chat_member(chat_id=cid, user_id=user_id)
+            if member.status not in [ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.CREATOR]:
+                not_joined.append({'name': title, 'url': url})
+        except: pass 
+    return len(not_joined) == 0, not_joined
+
+# --- MENU ---
+async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data['state'] = None
+    user = update.effective_user
+    
+    is_sub, channels = await check_subscription(user.id, context.bot)
+    
+    if not is_sub:
+        kb = []
+        for ch in channels: kb.append([InlineKeyboardButton(f"➕ {ch['name']} ga qo'shilish", url=ch['url'])])
+        kb.append([InlineKeyboardButton("✅ Tekshirish", callback_data="check_sub")])
+        text = "🔒 <b>Botdan to'liq foydalanish uchun, iltimos, quyidagi homiy kanallarga a'zo bo'ling:</b>"
+        markup = InlineKeyboardMarkup(kb)
+    else:
+        kb = [[InlineKeyboardButton("🔗 Link olish (Konkurs)", callback_data="get_link"), InlineKeyboardButton("📊 Natijam", callback_data="stats")]]
+        if user.id == MAIN_ADMIN_ID: kb.append([InlineKeyboardButton("⚙️ Admin Panel", callback_data="admin_panel")])
+        text = f"👋 <b>Assalomu alaykum, {user.first_name}!</b>\n\n🎁 Konkursda ishtirok eting va <b>Bepul Kursni</b> yutib oling!\n\nBoshlash uchun quyidagi tugmani bosing 👇"
+        markup = InlineKeyboardMarkup(kb)
+
+    try:
+        if update.callback_query: await update.callback_query.message.edit_text(text, reply_markup=markup, parse_mode=ParseMode.HTML)
+        else: await update.message.reply_text(text, reply_markup=markup, parse_mode=ParseMode.HTML)
+    except:
+        await update.message.reply_text(text, reply_markup=markup, parse_mode=ParseMode.HTML)
+
+# --- START ---
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    conn = get_db(); cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO users (user_id, full_name, username, invites) VALUES (?, ?, ?, 0)", (user.id, user.full_name, user.username))
+    conn.commit(); conn.close()
+    await show_main_menu(update, context)
+
+# --- CALLBACKS ---
+async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    data = query.data
+    user = query.from_user
+    context.user_data['state'] = None 
+
+    if data == "back_home" or data == "check_sub":
+        await query.answer()
+        await show_main_menu(update, context)
+        return
+
+    if user.id != MAIN_ADMIN_ID:
+        is_sub, _ = await check_subscription(user.id, context.bot)
+        if not is_sub:
+            await query.answer("Avval kanallarga a'zo bo'ling!", show_alert=True)
+            await show_main_menu(update, context)
+            return
+
+    if data == "get_link":
+        conn = get_db(); cur = conn.cursor()
+        u_data = cur.execute("SELECT invite_link, invites, assigned_channel_id FROM users WHERE user_id=?", (user.id,)).fetchone()
         
-        // Xavfsizlik
-        document.addEventListener('contextmenu', event => event.preventDefault());
-    </script>
-</body>
-</html>
+        link = ""
+        invites = 0
+        if u_data and u_data[0]:
+            link = u_data[0]; invites = u_data[1]
+        else:
+            res = get_next_target_channel()
+            if not res:
+                await query.answer("Konkurs kanallari topilmadi", show_alert=True); conn.close(); return
+            
+            target_cid, target_title = res
+            try:
+                invite = await context.bot.create_chat_invite_link(
+                    chat_id=target_cid,
+                    name=str(user.id),
+                    member_limit=0
+                )
+                link = invite.invite_link
+                cur.execute("UPDATE users SET invite_link=?, assigned_channel_id=? WHERE user_id=?", (link, target_cid, user.id))
+                conn.commit()
+            except Exception as e:
+                await query.edit_message_text(f"❌ Xato: Bot {target_title} kanalida Admin emas!\n{e}"); conn.close(); return
+
+        conn.close()
+        req = get_setting('required_invites')
+        
+        await query.edit_message_text(
+            f"🔗 <b>Sizning Konkurs Havolangiz:</b>\n\n{link}\n\n👆 Bu havolani tarqating. Do'stlar shu orqali qo'shilsa ball beriladi.\n\n📊 Natija: <b>{invites}/{req}</b>",
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Orqaga", callback_data="back_home")]])
+        )
+
+    elif data == "stats":
+        conn = get_db(); u_data = conn.cursor().execute("SELECT invites, pro_claimed
