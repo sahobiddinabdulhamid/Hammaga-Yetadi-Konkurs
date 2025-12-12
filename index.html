@@ -1,156 +1,165 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Kursni Olish</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root { 
-            --bg: #0f0f1a; 
-            --card: #1a1a2e; 
-            --text: #e0e0e0; 
-            --accent: #00ff88; 
-            --btn-grad: linear-gradient(45deg, #00b09b, #96c93d);
-        }
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-        
-        body { 
-            margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; 
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; 
-        }
-        
-        /* Asosiy Kartochka */
-        .card { 
-            background: var(--card); border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); 
-            text-align: center; margin-bottom: 20px; animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .icon { font-size: 50px; margin-bottom: 15px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-        h1 { margin: 0 0 10px; font-size: 22px; color: white; font-weight: 700; }
-        p { color: #aaa; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
-        
-        /* Tugmalar */
-        .btn {
-            background: var(--btn-grad); color: white; border: none; padding: 15px; 
-            border-radius: 12px; font-size: 16px; font-weight: bold; width: 100%; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2); transition: transform 0.1s;
-        }
-        .btn:active { transform: scale(0.97); }
-        
-        .btn-sec {
-            background: rgba(255,255,255,0.08); color: #ccc; margin-top: 15px; box-shadow: none;
-        }
-
-        /* Qo'shimcha Ma'lumotlar */
-        .info-box {
-            margin-top: 15px; font-size: 12px; color: #888; 
-            background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;
-        }
-
-        /* Reklama Bloki (Clickable) */
-        .ad-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-            border-left: 4px solid #FFD700; text-align: left; cursor: pointer;
-            transition: background 0.2s;
-        }
-        .ad-card:active { background: rgba(255,255,255,0.1); }
-        .ad-label { font-size: 10px; font-weight: bold; color: #FFD700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .ad-content { font-size: 13px; color: #fff; line-height: 1.4; display: flex; justify-content: space-between; align-items: center;}
-        .ad-arrow { font-size: 16px; color: #FFD700; }
-
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kurs — Hammaga Yetadi Konkurs</title>
+  <style>
+    :root{
+      --bg: #0b0f1a;
+      --card: linear-gradient(135deg,#0f1724 0%, #0b1530 100%);
+      --neon: #00ffd5;
+      --accent: #7c5cff;
+      --glass: rgba(255,255,255,0.04);
+      color-scheme: dark;
+    }
+    html,body{height:100%;margin:0;padding:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:radial-gradient(ellipse at 20% 10%, rgba(124,92,255,0.08), transparent 10%), linear-gradient(180deg,#061021 0%, #041027 100%); color:#e6f0ff;}
+    .wrap{max-width:960px;margin:24px auto;padding:20px;}
+    .card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 6px 30px rgba(7,10,20,0.6);border:1px solid rgba(255,255,255,0.03);}
+    header{display:flex;align-items:center;gap:16px;}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--neon));display:flex;align-items:center;justify-content:center;font-weight:700;color:#021;box-shadow:0 3px 12px rgba(124,92,255,0.18);}
+    h1{margin:0;font-size:20px;}
+    .meta{margin-top:6px;color:rgba(230,240,255,0.7);font-size:13px;}
+    .content{display:flex;gap:20px;margin-top:18px;flex-wrap:wrap;}
+    .col{flex:1 1 340px;min-width:260px;}
+    .box{background:var(--glass);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);}
+    .course-title{font-size:18px;margin:6px 0 12px;}
+    .btn{
+      display:inline-block;padding:12px 16px;border-radius:10px;font-weight:600;background:linear-gradient(90deg,var(--neon),var(--accent));color:#021;text-decoration:none;
+      box-shadow:0 6px 18px rgba(0,255,213,0.08), inset 0 -2px 8px rgba(255,255,255,0.06);
+    }
+    .ad{margin-top:12px;padding:10px;border-radius:10px;background:linear-gradient(90deg, rgba(124,92,255,0.08), rgba(0,255,213,0.03));border:1px dashed rgba(124,92,255,0.12);}
+    .small{font-size:13px;color:rgba(230,240,255,0.8)}
+    footer{margin-top:18px;font-size:13px;color:rgba(200,220,255,0.6)}
+    /* security hides */
+    .hint{font-size:12px;color:rgba(200,220,255,0.5);margin-top:10px;}
+    @media (max-width:640px){
+      .content{flex-direction:column;}
+    }
+  </style>
 </head>
-<body oncontextmenu="return false;">
-
+<body>
+  <div class="wrap">
     <div class="card">
-        <div class="icon">🎉</div>
-        <h1>Tabriklaymiz!</h1>
-        <p>Siz barcha shartlarni bajardingiz.<br>Maxsus kursga kirish uchun quyidagi tugmani bosing.</p>
-        
-        <button class="btn" onclick="openCourse()">
-            <i class="fas fa-play-circle"></i> KURSNI KO'RISH
-        </button>
-
-        <div class="info-box" id="deadlineBox">
-            ⏳ Tugash vaqti: <span id="deadlineText" style="color: #fff; font-weight: bold;">...</span>
+      <header>
+        <div class="logo">HY</div>
+        <div>
+          <h1>Kursni olish — Hammaga Yetadi Konkurs</h1>
+          <div class="meta">Kerakli takliflar to‘plang va WebApp orqali kursni oling.</div>
         </div>
-    </div>
+      </header>
 
-    <div class="card ad-card" id="adCard" style="display: none;" onclick="openAdLink()">
-        <div class="ad-label">🔥 Tavsiya qilamiz</div>
-        <div class="ad-content">
-            <span id="adText"></span>
-            <i class="fas fa-external-link-alt ad-arrow"></i>
+      <div class="content">
+        <div class="col">
+          <div class="box">
+            <div class="course-title">Kurs (Maxfiy havola)</div>
+            <div class="small">Kurs havolasini olish uchun quyidagi tugmani bosing.</div>
+            <div style="margin-top:12px;">
+              <a id="openCourseBtn" class="btn" href="#" onclick="openCourse()">Kursni ochish</a>
+            </div>
+
+            <div id="adBox" class="ad" style="display:none;">
+              <div id="adText" style="font-weight:600;color:var(--neon)"></div>
+              <div style="margin-top:8px;">
+                <a id="adLink" class="small" href="#" onclick="openAd()">Reklama: ochish</a>
+              </div>
+            </div>
+
+            <div class="hint">Qisqacha: webapp parametrlari orqali kurs havolasi yashirilgan. F12, Ctrl+U va o'ng tugma ishlatilishi cheklangan.</div>
+          </div>
         </div>
+
+        <div class="col">
+          <div class="box">
+            <div style="font-size:15px;font-weight:600">Ma'lumotlar</div>
+            <div style="margin-top:8px;" class="small">
+              <div><strong>Oxirgi sana:</strong> <span id="endDate">—</span></div>
+              <div style="margin-top:6px"><strong>Admin:</strong> <span id="adminContact">—</span></div>
+            </div>
+            <div style="margin-top:10px" class="small">
+              WebApp yuklangan URL parametrlari:
+              <ul>
+                <li><code>l</code> - kurs havolasi (yashirin)</li>
+                <li><code>ed</code> - tugash sanasi</li>
+                <li><code>ad</code> - reklama matni</li>
+                <li><code>al</code> - reklama linki</li>
+                <li><code>ac</code> - admin contact</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div>© Hammaga Yetadi Konkurs</div>
+      </footer>
     </div>
+  </div>
 
-    <button class="btn btn-sec" onclick="contactAdmin()" style="max-width: 400px;">
-        <i class="fas fa-headset"></i> Admin bilan bog'lanish
-    </button>
+  <script>
+    // Security: disable right-click, F12, Ctrl+U
+    document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+    document.addEventListener("keydown", function(e){
+      if(e.key === "F12") e.preventDefault();
+      if((e.ctrlKey && e.key === "u") || (e.ctrlKey && e.shiftKey && e.key === "I")) e.preventDefault();
+    });
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    // Telegram WebApp object
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
 
-        // URL dan ma'lumotlarni olish
-        const params = new URLSearchParams(window.location.search);
-        const link = decodeURIComponent(params.get('l') || "");
-        const endData = decodeURIComponent(params.get('ed') || "");
-        const adText = decodeURIComponent(params.get('ad') || "");
-        const adLink = decodeURIComponent(params.get('al') || ""); // Reklama Linki
-        const adminContact = decodeURIComponent(params.get('ac') || "");
+    // Get URL params
+    function getParams() {
+      const p = {};
+      const query = window.location.search.substring(1);
+      const pairs = query.split("&").filter(Boolean);
+      for(const pair of pairs){
+        const [k, v] = pair.split("=");
+        p[decodeURIComponent(k)] = v ? decodeURIComponent(v) : "";
+      }
+      return p;
+    }
 
-        // 1. Muddatni joylash
-        if (endData && endData !== "null") {
-            document.getElementById('deadlineText').innerText = endData;
-        } else {
-            document.getElementById('deadlineBox').style.display = 'none';
-        }
-        
-        // 2. Reklamani joylash
-        if (adText && adText !== "null" && adText.length > 2) {
-            document.getElementById('adCard').style.display = 'block';
-            document.getElementById('adText').innerText = adText;
-        }
+    const params = getParams();
+    const courseLink = params["l"] || "";
+    const endDate = params["ed"] || "";
+    const adText = params["ad"] || "";
+    const adLink = params["al"] || "";
+    const adminContact = params["ac"] || "";
 
-        // 3. Reklama Linkini ochish
-        function openAdLink() {
-            if (adLink && adLink.length > 5 && adLink !== "null") {
-                tg.openTelegramLink(adLink); // Telegram link bo'lsa
-            } else {
-                // Agar telegram link bo'lmasa oddiy link sifatida ochish
-                tg.openLink(adLink);
-            }
-        }
+    // fill fields
+    document.getElementById("endDate").innerText = endDate || "—";
+    document.getElementById("adminContact").innerText = adminContact || "Admin bilan bog'laning";
 
-        // 4. Kursni ochish funksiyasi
-        function openCourse() {
-            if (link && link.length > 5 && link !== "null") {
-                tg.openLink(link);
-            } else {
-                tg.showPopup({message: "Uzr, kurs havolasi topilmadi yoki hali yuklanmagan."});
-            }
-        }
+    if(adText && adLink){
+      document.getElementById("adBox").style.display = "block";
+      document.getElementById("adText").innerText = adText;
+      const al = document.getElementById("adLink");
+      al.href = adLink;
+      al.innerText = adLink;
+    }
 
-        // 5. Admin bilan bog'lanish
-        function contactAdmin() {
-            if (adminContact && adminContact !== "null") {
-                tg.openTelegramLink(adminContact);
-            } else {
-                tg.showPopup({message: "Admin manzili kiritilmagan."});
-            }
-        }
-        
-        // Xavfsizlik
-        document.addEventListener('contextmenu', event => event.preventDefault());
-    </script>
+    function openCourse(){
+      if(!courseLink){
+        alert("Kurs havolasi topilmadi.");
+        return;
+      }
+      if(tg && tg.openLink){
+        tg.openLink(courseLink);
+      } else {
+        // fallback
+        window.open(courseLink, "_blank");
+      }
+    }
+    function openAd(){
+      if(!adLink) return;
+      if(tg && tg.openLink) tg.openLink(adLink);
+      else window.open(adLink, "_blank");
+    }
+
+    // Optional: Telegram WebApp ready
+    if(tg && tg.ready){
+      tg.ready();
+    }
+  </script>
 </body>
 </html>
