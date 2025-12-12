@@ -7,122 +7,133 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg: #0f0f1a; --card: #1a1a2e; --text: #e0e0e0; --accent: #00ff88; }
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; outline: none; -webkit-tap-highlight-color: transparent; }
+        :root { 
+            --bg: #0f0f1a; 
+            --card: #1a1a2e; 
+            --text: #e0e0e0; 
+            --accent: #00ff88; 
+            --btn-grad: linear-gradient(45deg, #00b09b, #96c93d);
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
         
         body { 
-            margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; 
-            display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; 
+            margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; 
         }
         
-        .container { text-align: center; padding: 20px; width: 100%; max-width: 400px; }
+        /* Asosiy Kartochka */
         .card { 
-            background: var(--card); border-radius: 20px; padding: 30px 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); 
-            animation: fadeIn 0.5s ease;
+            background: var(--card); border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); 
+            text-align: center; margin-bottom: 20px; animation: fadeIn 0.5s ease;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .icon { font-size: 60px; margin-bottom: 20px; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        
-        h1 { margin: 0 0 10px; font-size: 24px; color: white; }
-        p { color: #aaa; font-size: 14px; margin-bottom: 30px; line-height: 1.5; }
-        
-        .btn {
-            background: linear-gradient(45deg, #00b09b, #96c93d);
-            color: white; border: none; padding: 16px 32px; border-radius: 12px;
-            font-size: 18px; font-weight: bold; cursor: pointer; width: 100%;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: transform 0.1s, box-shadow 0.2s; 
-            box-shadow: 0 4px 15px rgba(0,255,136,0.3);
-        }
-        .btn:active { transform: scale(0.95); }
-        .btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; opacity: 0.7; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Himoya qatlami (Overlay) */
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;
-            background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; color: white;
+        .icon { font-size: 50px; margin-bottom: 15px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        h1 { margin: 0 0 10px; font-size: 22px; color: white; font-weight: 700; }
+        p { color: #aaa; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+        
+        /* Tugmalar */
+        .btn {
+            background: var(--btn-grad); color: white; border: none; padding: 15px; 
+            border-radius: 12px; font-size: 16px; font-weight: bold; width: 100%; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2); transition: transform 0.1s;
         }
+        .btn:active { transform: scale(0.97); }
+        
+        .btn-sec {
+            background: rgba(255,255,255,0.08); color: #ccc; margin-top: 15px; box-shadow: none;
+        }
+
+        /* Qo'shimcha Ma'lumotlar */
+        .info-box {
+            margin-top: 15px; font-size: 12px; color: #888; 
+            background: rgba(0,0,0,0.2); padding: 8px; border-radius: 8px;
+        }
+
+        /* Reklama Bloki */
+        .ad-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border-left: 4px solid #FFD700; text-align: left;
+        }
+        .ad-label { font-size: 10px; font-weight: bold; color: #FFD700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .ad-content { font-size: 13px; color: #fff; line-height: 1.4; }
+
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div class="overlay" id="securityOverlay">
-        <div>⚠️ Ruxsatsiz harakat!</div>
-    </div>
+    <div class="card">
+        <div class="icon">🎉</div>
+        <h1>Tabriklaymiz!</h1>
+        <p>Siz barcha shartlarni bajardingiz.<br>Maxsus kursga kirish uchun quyidagi tugmani bosing.</p>
+        
+        <button class="btn" onclick="openCourse()">
+            <i class="fas fa-play-circle"></i> KURSNI KO'RISH
+        </button>
 
-    <div class="container">
-        <div class="card">
-            <div class="icon">🎁</div>
-            <h1>Tabriklaymiz!</h1>
-            <p>Siz shartlarni muvaffaqiyatli bajardingiz.<br>Kursga kirish uchun quyidagi tugmani bosing.</p>
-            
-            <button class="btn" id="openBtn" onclick="openCourse()">
-                <i class="fas fa-play-circle"></i> KURSNI KO'RISH
-            </button>
+        <div class="info-box" id="deadlineBox">
+            ⏳ Tugash vaqti: <span id="deadlineText" style="color: #fff; font-weight: bold;">...</span>
         </div>
     </div>
+
+    <div class="card ad-card" id="adCard" style="display: none;">
+        <div class="ad-label">🔥 Tavsiya qilamiz</div>
+        <div class="ad-content" id="adText"></div>
+    </div>
+
+    <button class="btn btn-sec" onclick="contactAdmin()" style="max-width: 400px;">
+        <i class="fas fa-headset"></i> Admin bilan bog'lanish
+    </button>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // URLdan 'l' (link) parametrini olamiz (bot.py da shunday yuborilgan)
+        // URL dan ma'lumotlarni olish
         const params = new URLSearchParams(window.location.search);
-        let courseLink = decodeURIComponent(params.get('l') || "");
+        const link = decodeURIComponent(params.get('l') || "");
+        const endData = decodeURIComponent(params.get('ed') || "");
+        const adText = decodeURIComponent(params.get('ad') || "");
+        const adminContact = decodeURIComponent(params.get('ac') || "");
 
-        // Tugma bosilganda
-        function openCourse() {
-            const btn = document.getElementById('openBtn');
-            
-            if (courseLink && courseLink.length > 5 && courseLink !== "null") {
-                // Tugmani vaqtincha o'chirish (qayta-qayta bosmaslik uchun)
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ochilmoqda...';
-
-                // Telegram ichida tashqi linkni ochish
-                tg.openLink(courseLink);
-
-                // 2 soniyadan keyin tugmani qayta tiklash
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-check"></i> Qayta ochish';
-                }, 2000);
-            } else {
-                tg.showPopup({
-                    title: "Xatolik",
-                    message: "Havola topilmadi! Iltimos, botga qaytib qaytadan urinib ko'ring."
-                });
-            }
+        // 1. Muddatni joylash
+        if (endData && endData !== "null") {
+            document.getElementById('deadlineText').innerText = endData;
+        } else {
+            document.getElementById('deadlineBox').style.display = 'none';
         }
-
-        // --- HIMOYA QISMI ---
         
-        // 1. O'ng tugma (Right Click) bloklash
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // 2. Klaviatura kombinatsiyalarini bloklash (Ctrl+U, F12, Ctrl+Shift+I)
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123) return false; // F12
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Ctrl+Shift+C
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
-            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+        // 2. Reklamani joylash
+        if (adText && adText !== "null" && adText.length > 2) {
+            document.getElementById('adCard').style.display = 'block';
+            document.getElementById('adText').innerText = adText;
         }
 
-        // 3. DevTools (Kodini ko'rish) ochilganda sahifani tozalash
-        const element = new Image();
-        Object.defineProperty(element, 'id', {
-            get: function() {
-                document.body.innerHTML = "";
-                document.getElementById('securityOverlay').style.display = 'flex';
-                tg.close(); // Ilovani yopib yuborish
+        // 3. Kursni ochish funksiyasi
+        function openCourse() {
+            if (link && link.length > 5 && link !== "null") {
+                tg.openLink(link);
+            } else {
+                tg.showPopup({message: "Uzr, kurs havolasi topilmadi yoki hali yuklanmagan."});
             }
-        });
-        console.log(element);
+        }
 
+        // 4. Admin bilan bog'lanish
+        function contactAdmin() {
+            if (adminContact && adminContact !== "null") {
+                tg.openTelegramLink(adminContact);
+            } else {
+                tg.showPopup({message: "Admin manzili kiritilmagan."});
+            }
+        }
+        
+        // Xavfsizlik (O'ng tugma va belgilashni o'chirish)
+        document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
 </html>
