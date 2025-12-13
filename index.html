@@ -2,35 +2,189 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maxsus Kurs</title>
-    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Kursni Olish</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --bg: #0f0f1a; 
+            --card: #1a1a2e; 
+            --text: #e0e0e0; 
+            --accent: #00ff88; 
+            --gold: #FFD700;
+            --btn-grad: linear-gradient(45deg, #00b09b, #96c93d);
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body { 
+            margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; 
+        }
+        
+        /* Asosiy Kartochka */
+        .card { 
+            background: var(--card); border-radius: 20px; padding: 25px; width: 100%; max-width: 400px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); 
+            text-align: center; margin-bottom: 20px; animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .icon { font-size: 60px; margin-bottom: 15px; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        h1 { margin: 0 0 10px; font-size: 24px; color: white; font-weight: 700; }
+        p { color: #aaa; font-size: 15px; margin-bottom: 25px; line-height: 1.5; }
+        
+        /* Tugma */
+        .btn {
+            background: var(--btn-grad); color: white; border: none; padding: 16px; 
+            border-radius: 14px; font-size: 18px; font-weight: bold; width: 100%; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3); transition: transform 0.1s, opacity 0.2s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.7; cursor: wait; }
+        
+        /* Admin Tugmasi */
+        .btn-sec {
+            background: rgba(255,255,255,0.08); color: #ccc; margin-top: 15px; box-shadow: none; font-size: 14px; padding: 12px;
+        }
+
+        /* BANNER (REKLAMA) - YANGI DIZAYN */
+        .banner {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.02));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 16px; margin-bottom: 20px; width: 100%; max-width: 400px;
+            display: flex; align-items: center; overflow: hidden;
+            text-align: left; cursor: pointer; transition: transform 0.1s;
+            display: none; /* Boshida yashirin */
+        }
+        .banner:active { transform: scale(0.98); background: rgba(255,215,0,0.15); }
+
+        /* Chap tomon (Matn) */
+        .banner-content {
+            padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+        }
+        .banner-label {
+            font-size: 10px; font-weight: bold; color: var(--gold); 
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .banner-text {
+            font-size: 14px; color: #fff; line-height: 1.3; font-weight: 500;
+        }
+
+        /* O'ng tomon (Rasm) */
+        .banner-img {
+            width: 90px; height: 90px; flex-shrink: 0;
+            background-size: cover; background-position: center;
+            border-left: 1px solid rgba(255,255,255,0.1);
+            display: none; /* Rasm bo'lmasa ko'rinmaydi */
+        }
+
+        .info-box {
+            margin-top: 20px; font-size: 13px; color: #888; 
+            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; display: none;
+        }
+
+    </style>
 </head>
 <body oncontextmenu="return false;">
-    <div class="container">
-        <!-- Ad Banner -->
-        <div class="banner-container" id="ad-banner">
-            <a id="banner-link" href="#" target="_blank">
-                <img id="banner-img" src="" alt="Reklama">
-                <p id="banner-text"></p>
-            </a>
-        </div>
 
-        <!-- Course Section -->
-        <div class="content">
-            <h1>Maxsus Kurs</h1>
-            <p>Kursga kirish uchun quyidagi tugmani bosing. Eslatma: Havolani nusxalash taqiqlangan.</p>
-            
-            <div id="course-area" class="hidden">
-                <a id="course-btn" href="#" class="btn">🚀 Kursga Kirish</a>
-            </div>
-            
-            <div id="lock-area">
-                <p>🔒 Kursni ochish uchun botdagi shartlarni bajaring!</p>
-            </div>
+    <div class="card">
+        <div class="icon">🎁</div>
+        <h1>Tabriklaymiz!</h1>
+        <p>Siz barcha shartlarni muvaffaqiyatli bajardingiz.<br>Maxsus kursni olish uchun tugmani bosing.</p>
+        
+        <button class="btn" id="mainBtn" onclick="openCourse()">
+            <i class="fas fa-play-circle"></i> KURSNI OCHISH
+        </button>
+
+        <div class="info-box" id="deadlineBox">
+            ⏳ Tugash vaqti: <span id="deadlineText" style="color: #fff; font-weight: bold;"></span>
         </div>
     </div>
-    <script src="./script.js"></script>
+
+    <div class="banner" id="adBanner" onclick="openAdLink()">
+        <div class="banner-content">
+            <span class="banner-label">🔥 Tavsiya etamiz</span>
+            <span class="banner-text" id="adText"></span>
+        </div>
+        <div class="banner-img" id="adImg"></div>
+    </div>
+
+    <button class="btn btn-sec" onclick="contactAdmin()" style="max-width: 400px;">
+        <i class="fas fa-headset"></i> Admin bilan bog'lanish
+    </button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const params = new URLSearchParams(window.location.search);
+        
+        function cleanParam(val) {
+            if (!val || val === "null" || val === "None" || val === "" || val === "undefined") return null;
+            return decodeURIComponent(val);
+        }
+
+        const link = cleanParam(params.get('l'));
+        const endData = cleanParam(params.get('ed'));
+        const adText = cleanParam(params.get('ad'));
+        const adLink = cleanParam(params.get('al'));
+        const imgUrl = cleanParam(params.get('img'));
+        const adminContact = cleanParam(params.get('ac'));
+
+        // Muddat
+        if (endData) {
+            document.getElementById('deadlineBox').style.display = 'block';
+            document.getElementById('deadlineText').innerText = endData;
+        }
+        
+        // Reklama Banneri
+        if (adText && adText.length > 2) {
+            const banner = document.getElementById('adBanner');
+            banner.style.display = 'flex';
+            document.getElementById('adText').innerText = adText;
+            
+            // Rasm (Agar URL bo'lsa)
+            if (imgUrl && imgUrl.startsWith('http')) {
+                const imgDiv = document.getElementById('adImg');
+                imgDiv.style.backgroundImage = `url('${imgUrl}')`;
+                imgDiv.style.display = 'block';
+            }
+        }
+
+        function openAdLink() {
+            if (adLink) {
+                if (adLink.startsWith('https://t.me')) tg.openTelegramLink(adLink);
+                else tg.openLink(adLink);
+            }
+        }
+
+        function openCourse() {
+            const btn = document.getElementById('mainBtn');
+            if (link) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ochilmoqda...';
+                setTimeout(() => {
+                    tg.openLink(link);
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-check"></i> Qayta ochish';
+                    }, 1000);
+                }, 500);
+            } else {
+                tg.showPopup({message: "Uzr, kurs havolasi hali kiritilmagan."});
+            }
+        }
+
+        function contactAdmin() {
+            if (adminContact) tg.openTelegramLink(adminContact);
+            else tg.showPopup({message: "Admin manzili kiritilmagan."});
+        }
+        
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
 </body>
 </html>
