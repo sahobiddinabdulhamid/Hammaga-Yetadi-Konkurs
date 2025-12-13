@@ -2,214 +2,35 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Konkurs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maxsus Kurs</title>
+    <link rel="stylesheet" href="./style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg-color: var(--tg-theme-bg-color, #fff);
-            --text-color: var(--tg-theme-text-color, #000);
-            --btn-color: var(--tg-theme-button-color, #2481cc);
-            --btn-text: var(--tg-theme-button-text-color, #fff);
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #f0f0f0);
-        }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        /* Sahifa yuklanguncha hech narsa ko'rinmaydi */
-        .view {
-            display: none;
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .card {
-            background: var(--secondary-bg);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        h2 { margin-top: 0; font-size: 22px; }
-        p { font-size: 16px; opacity: 0.8; }
-        
-        .btn {
-            background-color: var(--btn-color);
-            color: var(--btn-text);
-            padding: 16px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            width: 100%;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 15px;
-            text-decoration: none;
-            display: block;
-            box-sizing: border-box;
-            transition: opacity 0.2s;
-        }
-        
-        .btn:active { opacity: 0.8; }
-
-        .progress-container {
-            background: rgba(0,0,0,0.1);
-            border-radius: 8px;
-            height: 10px;
-            width: 100%;
-            margin: 15px 0;
-            overflow: hidden;
-        }
-        .progress-bar {
-            background: var(--btn-color);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .timer {
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 20px;
-            margin: 15px 0;
-            background: rgba(231, 76, 60, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .ad-banner {
-            border: 2px dashed var(--btn-color);
-            padding: 15px;
-            border-radius: 12px;
-            margin-top: 30px;
-            background: rgba(36, 129, 204, 0.05);
-        }
-        .ad-banner h3 { margin: 0 0 10px 0; font-size: 16px; }
-        .ad-banner a { color: var(--btn-color); text-decoration: none; font-weight: bold; }
-
-        /* Loader */
-        #loader { font-size: 18px; font-weight: bold; color: var(--btn-color); }
-    </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
+    <div class="container">
+        <!-- Ad Banner -->
+        <div class="banner-container" id="ad-banner">
+            <a id="banner-link" href="#" target="_blank">
+                <img id="banner-img" src="" alt="Reklama">
+                <p id="banner-text"></p>
+            </a>
+        </div>
 
-    <div id="loader">Yuklanmoqda...</div>
-
-    <!-- 1. Qulflangan Oyna -->
-    <div id="locked-view" class="view">
-        <div class="card">
-            <div style="font-size: 40px; margin-bottom: 10px;">🔒</div>
-            <h2>Kirish Yopiq</h2>
-            <p>Kursni ochish uchun do'stlaringizni taklif qiling.</p>
+        <!-- Course Section -->
+        <div class="content">
+            <h1>Maxsus Kurs</h1>
+            <p>Kursga kirish uchun quyidagi tugmani bosing. Eslatma: Havolani nusxalash taqiqlangan.</p>
             
-            <div class="progress-container">
-                <div id="progress-bar" class="progress-bar"></div>
+            <div id="course-area" class="hidden">
+                <a id="course-btn" href="#" class="btn">🚀 Kursga Kirish</a>
             </div>
             
-            <p style="font-size: 18px; font-weight: bold;">
-                <span id="stat-current">0</span> / <span id="stat-req">0</span>
-            </p>
-        </div>
-        <button class="btn" onclick="Telegram.WebApp.close()">Ortga qaytish</button>
-    </div>
-
-    <!-- 2. Ochiq Oyna -->
-    <div id="unlocked-view" class="view">
-        <div class="card">
-            <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
-            <h2>Tabriklaymiz!</h2>
-            <p>Siz kursga to'liq kirish huquqiga egasiz.</p>
-            
-            <div class="timer" id="countdown">00:00:00</div>
-            
-            <button id="go-course-btn" class="btn">Kursni Boshlash</button>
-        </div>
-
-        <!-- Reklama -->
-        <div class="ad-banner" id="ad-block" style="display:none;">
-            <h3 id="ad-text"></h3>
-            <a id="ad-link" href="#" target="_blank">Batafsil ko'rish &rarr;</a>
+            <div id="lock-area">
+                <p>🔒 Kursni ochish uchun botdagi shartlarni bajaring!</p>
+            </div>
         </div>
     </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // URL parametrlarini olish
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        const access = urlParams.get('access') === 'true';
-        const invites = parseInt(urlParams.get('invites') || 0);
-        const required = parseInt(urlParams.get('req') || 5);
-        const courseUrl = urlParams.get('course') || ''; // Agar access=false bo'lsa, bu bo'sh keladi
-        const bannerText = urlParams.get('bt');
-        const bannerLink = urlParams.get('bl');
-
-        const loader = document.getElementById('loader');
-        const lockedView = document.getElementById('locked-view');
-        const unlockedView = document.getElementById('unlocked-view');
-
-        // Logic
-        if (access) {
-            // Ruxsat bor
-            loader.style.display = 'none';
-            unlockedView.style.display = 'block';
-
-            document.getElementById('go-course-btn').addEventListener('click', () => {
-                if(courseUrl) {
-                    tg.openLink(courseUrl);
-                } else {
-                    tg.showAlert("Havola topilmadi!");
-                }
-            });
-
-            if (bannerText && bannerLink) {
-                document.getElementById('ad-block').style.display = 'block';
-                document.getElementById('ad-text').innerText = bannerText;
-                document.getElementById('ad-link').href = bannerLink;
-            }
-
-            // Taymer
-            let duration = 24 * 60 * 60; // 24 soat
-            const timerEl = document.getElementById('countdown');
-            
-            setInterval(() => {
-                let h = Math.floor(duration / 3600);
-                let m = Math.floor((duration % 3600) / 60);
-                let s = Math.floor(duration % 60);
-                timerEl.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                if (duration > 0) duration--;
-            }, 1000);
-
-        } else {
-            // Ruxsat YO'Q
-            loader.style.display = 'none';
-            lockedView.style.display = 'block';
-
-            document.getElementById('stat-current').innerText = invites;
-            document.getElementById('stat-req').innerText = required;
-
-            // Progress bar
-            const percentage = Math.min((invites / required) * 100, 100);
-            document.getElementById('progress-bar').style.width = percentage + '%';
-        }
-    </script>
+    <script src="./script.js"></script>
 </body>
 </html>
